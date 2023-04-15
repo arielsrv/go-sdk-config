@@ -1,0 +1,4 @@
+app_name: go-sdk-config
+base.url: https://gorest.co.in/public/v2/
+boolean.key: true
+int.key: 10

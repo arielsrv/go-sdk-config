@@ -1,0 +1,56 @@
+variables:
+  TAG: v0.0.1
+  GOLANG_VERSION: "1.20"
+  GOPRIVATE: "gitlab.tiendanimal.com"
+  GITLAB_TOKEN: ${CICD_TOKEN}
+  GIT_DEPTH: 0
+
+default:
+  tags:
+    - kubernetes-executor
+
+stages:
+  - build
+  - test
+
+compile:
+  stage: build
+  image: docker.io/golang:${GOLANG_VERSION}
+  script:
+    - go mod tidy
+    - go build -v ./...
+  allow_failure: false
+  only:
+    - branches
+    - merge_requests
+
+unit:test:
+  stage: test
+  image: docker.io/golang:${GOLANG_VERSION}
+  script:
+    - go install gotest.tools/gotestsum@latest
+    - gotestsum --junitfile report.xml --format testname
+  artifacts:
+    when: always
+    reports:
+      junit: report.xml
+  allow_failure: false
+  only:
+    - branches
+    - merge_requests
+
+unit:coverage:
+  stage: test
+  image: docker.io/golang:${GOLANG_VERSION}
+  script:
+    - CGO_ENABLED=0 go test ./... -tags 'ci' -coverprofile=coverage-report.out
+    - go tool cover -html=coverage-report.out -o coverage-report.html
+    - go tool cover -func=coverage-report.out
+  artifacts:
+    paths:
+      - coverage-report.html
+  coverage: "/\\(statements\\)\\s+\\d+.?\\d+%/"
+  allow_failure: false
+  only:
+    - branches
+    - merge_requests

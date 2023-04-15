@@ -1,0 +1,3 @@
+app.env: local
+host: 127.0.0.1
+public: 127.0.0.1
